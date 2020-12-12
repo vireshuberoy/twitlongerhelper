@@ -26,43 +26,46 @@ logger = logging.getLogger()
 def check_mentions(api, since_id):
     logger.info("getting mentions")
     new_since_id = since_id
-    for tweet in tweepy.Cursor(api.mentions_timeline, since_id=since_id).items():
-        new_since_id = max(tweet.id, int(new_since_id))
+    try:
+        for tweet in tweepy.Cursor(api.mentions_timeline, since_id=since_id).items():
+            new_since_id = max(tweet.id, int(new_since_id))
 
-        if tweet._json['user']['screen_name'] == 'TwitlongerH':
-            continue
+            if tweet._json['user']['screen_name'] == 'TwitlongerH':
+                continue
 
-        status_id_of_post = tweet._json['in_reply_to_status_id']
-        twitlonger_link = api.get_status(status_id_of_post)._json['entities']['urls'][0]['expanded_url']
+            status_id_of_post = tweet._json['in_reply_to_status_id']
+            twitlonger_link = api.get_status(status_id_of_post)._json['entities']['urls'][0]['expanded_url']
 
-        res = re.match("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", twitlonger_link)
-        screen_name = tweet._json['user']['screen_name']
-        if res:
-            content_of_twitlonger = return_scrape(twitlonger_link)
-            logger.info(content_of_twitlonger)
-            n = 190
-            parts = [content_of_twitlonger[i:i+n] for i in range(0, len(content_of_twitlonger), n)]
-            first = True
-            response = None
-            reply_statement = ""
-            for i, part_of_tweet in enumerate(parts):
-                if first:
-                    reply_statement = f"@{screen_name} This is the content: \n{part_of_tweet} {i + 1}/{len(parts)}"
-                    first = False
-                    response = api.update_status(status=reply_statement, in_reply_to_status_id=tweet.id)
+            res = re.match("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", twitlonger_link)
+            screen_name = tweet._json['user']['screen_name']
+            if res:
+                content_of_twitlonger = return_scrape(twitlonger_link)
+                logger.info(content_of_twitlonger)
+                n = 190
+                parts = [content_of_twitlonger[i:i+n] for i in range(0, len(content_of_twitlonger), n)]
+                first = True
+                response = None
+                reply_statement = ""
+                for i, part_of_tweet in enumerate(parts):
+                    if first:
+                        reply_statement = f"@{screen_name} This is the content: \n{part_of_tweet} {i + 1}/{len(parts)}"
+                        first = False
+                        response = api.update_status(status=reply_statement, in_reply_to_status_id=tweet.id)
+                        time.sleep(2)
+                        continue
+                    id_for_tweet = response._json['id']
+                    name = response._json['user']['screen_name']
+                    reply_statement = f"@{name} {part_of_tweet} {i + 1}/{len(parts)}"
+
+                    api.update_status(status=reply_statement, in_reply_to_status_id=id_for_tweet)
                     time.sleep(2)
-                    continue
-                id_for_tweet = response._json['id']
-                name = response._json['user']['screen_name']
-                reply_statement = f"@{name} {part_of_tweet} {i + 1}/{len(parts)}"
+            else:
+                api.update_status(status=f"@{screen_name} Parent post does not contain a link. Please make sure that you reply directly to the post containing the link", in_reply_to_status_id=tweet.id)
+                print("Parent post does not contain a link")
 
-                api.update_status(status=reply_statement, in_reply_to_status_id=id_for_tweet)
-                time.sleep(2)
-        else:
-            api.update_status(status=f"@{screen_name} Parent post does not contain a link. Please make sure that you reply directly to the post containing the link", in_reply_to_status_id=tweet.id)
-            print("Parent post does not contain a link")
-
-    return new_since_id
+        return new_since_id
+    except:
+        print(traceback.print_exc())
 
 since_id = 1
 try:
