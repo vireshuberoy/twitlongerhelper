@@ -1,4 +1,5 @@
 import os
+import traceback
 import json
 import time
 from dotenv import load_dotenv
