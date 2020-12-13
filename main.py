@@ -67,11 +67,14 @@ def check_mentions(api, since_id):
         return new_since_id
     except:
         print(traceback.print_exc())
+        return new_since_id
 
 since_id = 1
 try:
     with open("since_id.txt", "r") as file:
         since_id = file.read()
+        if not type(since_id) == int:
+            since_id = 1
 except FileNotFoundError:
     pass
 
