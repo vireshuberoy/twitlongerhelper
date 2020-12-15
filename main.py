@@ -58,7 +58,7 @@ def check_mentions(api, since_id):
                     name = response._json['user']['screen_name']
                     reply_statement = f"@{name} {part_of_tweet} {i + 1}/{len(parts)}"
 
-                    api.update_status(status=reply_statement, in_reply_to_status_id=id_for_tweet)
+                    response = api.update_status(status=reply_statement, in_reply_to_status_id=id_for_tweet)
                     time.sleep(2)
             else:
                 api.update_status(status=f"@{screen_name} Parent post does not contain a link. Please make sure that you reply directly to the post containing the link", in_reply_to_status_id=tweet.id)
