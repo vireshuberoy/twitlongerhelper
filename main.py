@@ -52,14 +52,12 @@ def check_mentions(api, since_id):
                         reply_statement = f"@{screen_name} This is the content: \n{part_of_tweet} {i + 1}/{len(parts)}"
                         first = False
                         response = api.update_status(status=reply_statement, in_reply_to_status_id=tweet.id)
-                        time.sleep(2)
                         continue
                     id_for_tweet = response._json['id']
                     name = response._json['user']['screen_name']
                     reply_statement = f"@{name} {part_of_tweet} {i + 1}/{len(parts)}"
 
                     response = api.update_status(status=reply_statement, in_reply_to_status_id=id_for_tweet)
-                    time.sleep(2)
             else:
                 api.update_status(status=f"@{screen_name} Parent post does not contain a link. Please make sure that you reply directly to the post containing the link", in_reply_to_status_id=tweet.id)
                 print("Parent post does not contain a link")
@@ -82,5 +80,5 @@ while True:
     since_id = check_mentions(api, since_id)
     with open("since_id.txt", 'w+') as file:
         file.write(str(since_id))
-    time.sleep(60)
+    time.sleep(30)
     logger.info("sleeping")
